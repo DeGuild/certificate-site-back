@@ -1,14 +1,29 @@
-// The Cloud Functions for Firebase SDK to create Cloud Functions and set up triggers.
-const functions = require("firebase-functions");
+/**
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+"use strict";
 
-// The Firebase Admin SDK to access Firestore.
+const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
-const cors = require("cors")({
-  origin: true,
-});
+const express = require("express");
+//  const cookieParser = require('cookie-parser')();
+const cors = require("cors")({ origin: true });
+const app = express();
 
-exports.addCertificate = functions.https.onRequest(async (req, res) => {
+const addCertificate = async (req, res) => {
   const address = req.body.address;
   const url = req.body.url
     ? req.body.url
@@ -24,11 +39,11 @@ exports.addCertificate = functions.https.onRequest(async (req, res) => {
   res.json({
     result: "Successful",
   });
-});
+};
 
-exports.readCertificate = functions.https.onRequest(async (req, res) => {
+const readCertificate = async (req, res) => {
   // Grab the text parameter.
-  const address = req.path;
+  const address = req.params.address;
   const readResult = await admin
     .firestore()
     .collection("certificate/")
@@ -37,18 +52,12 @@ exports.readCertificate = functions.https.onRequest(async (req, res) => {
   // Send back a message that we've successfully written the message
   functions.logger.log(readResult.data());
 
-  cors(
-    (req,
-    res,
-    () => {
-      res.json({
-        imageUrl: `${readResult.data().url}`,
-      });
-    })
-  );
-});
+  res.json({
+    imageUrl: `${readResult.data().url}`,
+  });
+};
 
-exports.deleteCertificate = functions.https.onRequest(async (req, res) => {
+const deleteCertificate = async (req, res) => {
   // Grab the text parameter.
   const address = req.body.address;
   // Push the new message into Firestore using the Firebase Admin SDK.
@@ -58,37 +67,35 @@ exports.deleteCertificate = functions.https.onRequest(async (req, res) => {
   res.json({
     result: "Successful",
   });
-});
+};
 
-exports.allCertificates = functions.https.onRequest(async (req, res) => {
+const allCertificates = async (req, res) => {
   // Grab the text parameter.
-  const lastItem = req.path;
+  const address = req.params.address;
+  const direction = req.params.address;
   let data = [];
-  if (lastItem.length > 1) {
-    const paths = lastItem.split("/");
-    if (paths[2] === "next") {
-      const startAtSnapshot = admin
-        .firestore()
-        .collection("certificate/")
-        .orderBy("address", "desc")
-        .startAfter(paths[1]);
+  if (direction === "next") {
+    const startAtSnapshot = admin
+      .firestore()
+      .collection("certificate/")
+      .orderBy("address", "desc")
+      .startAfter(address);
 
-      const items = await startAtSnapshot.limit(8).get();
-      items.forEach((doc) => {
-        data.push(doc.id);
-      });
-    } else if (paths[2] === "previous") {
-      const startAtSnapshot = admin
-        .firestore()
-        .collection("certificate/")
-        .orderBy("address", "asc")
-        .startAfter(paths[1]);
+    const items = await startAtSnapshot.limit(8).get();
+    items.forEach((doc) => {
+      data.push(doc.id);
+    });
+  } else if (direction === "previous") {
+    const startAtSnapshot = admin
+      .firestore()
+      .collection("certificate/")
+      .orderBy("address", "asc")
+      .startAfter(address);
 
-      const items = await startAtSnapshot.limit(8).get();
-      items.forEach((doc) => {
-        data.push(doc.id);
-      });
-    }
+    const items = await startAtSnapshot.limit(8).get();
+    items.forEach((doc) => {
+      data.push(doc.id);
+    });
   } else {
     const readResult = await admin
       .firestore()
@@ -104,13 +111,18 @@ exports.allCertificates = functions.https.onRequest(async (req, res) => {
     functions.logger.log(readResult);
   }
 
-  cors(
-    (req,
-    res,
-    () => {
-      res.json({
-        result: data,
-      });
-    })
-  );
-});
+  res.json({
+    result: data,
+  });
+};
+
+app.use(cors);
+app.post("/addCertificate", addCertificate);
+app.get("/readCertificate/:address", readCertificate);
+app.post("/deleteCertificate", deleteCertificate);
+app.get("/allCertificates/:address/:direction", allCertificates);
+app.get("/allCertificates", allCertificates);
+// app.use(cookieParser);
+// app.use(validateFirebaseIdToken);
+
+exports.app = functions.https.onRequest(app);
