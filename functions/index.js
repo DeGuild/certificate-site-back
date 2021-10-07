@@ -4,9 +4,11 @@ const functions = require("firebase-functions");
 // The Firebase Admin SDK to access Firestore.
 const admin = require("firebase-admin");
 admin.initializeApp();
+const cors = require("cors")({
+  origin: true,
+});
 
 exports.addCertificate = functions.https.onRequest(async (req, res) => {
-  // Grab the text parameter.
   const address = req.body.address;
   const url = req.body.url
     ? req.body.url
@@ -35,9 +37,15 @@ exports.readCertificate = functions.https.onRequest(async (req, res) => {
   // Send back a message that we've successfully written the message
   functions.logger.log(readResult.data());
 
-  res.json({
-    imageUrl: `${readResult.data().url}`,
-  });
+  cors(
+    (req,
+    res,
+    () => {
+      res.json({
+        imageUrl: `${readResult.data().url}`,
+      });
+    })
+  );
 });
 
 exports.deleteCertificate = functions.https.onRequest(async (req, res) => {
@@ -95,7 +103,14 @@ exports.allCertificates = functions.https.onRequest(async (req, res) => {
     // readResult.map
     functions.logger.log(readResult);
   }
-  res.json({
-    result: data,
-  });
+
+  cors(
+    (req,
+    res,
+    () => {
+      res.json({
+        result: data,
+      });
+    })
+  );
 });
