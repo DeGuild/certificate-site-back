@@ -71,8 +71,9 @@ const deleteCertificate = async (req, res) => {
 
 const allCertificates = async (req, res) => {
   // Grab the text parameter.
+  const limit = 40;
   const address = req.params.address;
-  const direction = req.params.address;
+  const direction = req.params.direction;
   let data = [];
   if (direction === "next") {
     const startAtSnapshot = admin
@@ -81,7 +82,7 @@ const allCertificates = async (req, res) => {
       .orderBy("address", "desc")
       .startAfter(address);
 
-    const items = await startAtSnapshot.limit(8).get();
+    const items = await startAtSnapshot.limit(limit).get();
     items.forEach((doc) => {
       data.push(doc.id);
     });
@@ -92,7 +93,7 @@ const allCertificates = async (req, res) => {
       .orderBy("address", "asc")
       .startAfter(address);
 
-    const items = await startAtSnapshot.limit(8).get();
+    const items = await startAtSnapshot.limit(limit).get();
     items.forEach((doc) => {
       data.push(doc.id);
     });
@@ -101,7 +102,7 @@ const allCertificates = async (req, res) => {
       .firestore()
       .collection("certificate/")
       .orderBy("address", "desc")
-      .limit(8)
+      .limit(limit)
       .get();
     // Send back a message that we've successfully written the message3
     readResult.forEach((doc) => {
@@ -121,7 +122,7 @@ app.post("/addCertificate", addCertificate);
 app.get("/readCertificate/:address", readCertificate);
 app.post("/deleteCertificate", deleteCertificate);
 app.get("/allCertificates/:address/:direction", allCertificates);
-app.get("/allCertificates", allCertificates);
+app.get("/allCertificatesOnce", allCertificates);
 // app.use(cookieParser);
 // app.use(validateFirebaseIdToken);
 
