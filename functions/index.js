@@ -70,22 +70,6 @@ const addCertificate = async (req, res) => {
   });
 };
 
-const readCertificate = async (req, res) => {
-  // Grab the text parameter.
-  const address = req.params.address;
-  const readResult = await admin
-    .firestore()
-    .collection("certificate/")
-    .doc(address)
-    .get();
-  // Send back a message that we've successfully written the message
-  functions.logger.log(readResult.data());
-
-  res.json({
-    imageUrl: `${readResult.data().url}`,
-  });
-};
-
 const deleteCertificate = async (req, res) => {
   // Grab the text parameter.
   const address = req.body.address;
@@ -98,62 +82,9 @@ const deleteCertificate = async (req, res) => {
   });
 };
 
-const allCertificates = async (req, res) => {
-  // Grab the text parameter.
-  const limit = 40;
-  const address = req.params.address;
-  const direction = req.params.direction;
-  let data = [];
-  if (direction === "next") {
-    const startAtSnapshot = admin
-      .firestore()
-      .collection("certificate/")
-      .orderBy("address", "desc")
-      .startAfter(address);
-
-    const items = await startAtSnapshot.limit(limit).get();
-    items.forEach((doc) => {
-      data.push(doc.id);
-    });
-  } else if (direction === "previous") {
-    const startAtSnapshot = admin
-      .firestore()
-      .collection("certificate/")
-      .orderBy("address", "asc")
-      .startAfter(address);
-
-    const items = await startAtSnapshot.limit(limit).get();
-    items.forEach((doc) => {
-      data.push(doc.id);
-    });
-  } else {
-    const readResult = await admin
-      .firestore()
-      .collection("certificate/")
-      .orderBy("address", "desc")
-      .limit(limit)
-      .get();
-    // Send back a message that we've successfully written the message3
-    readResult.forEach((doc) => {
-      data.push(doc.id);
-    });
-    // readResult.map
-    functions.logger.log(readResult);
-  }
-
-  res.json({
-    result: data,
-  });
-};
-
 certificate.use(cors);
 certificate.use(validateWeb3Token);
 certificate.post("/addCertificate", addCertificate);
-certificate.get("/readCertificate/:address", readCertificate);
 certificate.post("/deleteCertificate", deleteCertificate);
-certificate.get("/allCertificates/:address/:direction", allCertificates);
-certificate.get("/allCertificatesOnce", allCertificates);
-// certificate.use(cookieParser);
-// certificate.use(validateFirebaseIdToken);
 
 exports.certificate = functions.https.onRequest(certificate);
