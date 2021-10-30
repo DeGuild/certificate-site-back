@@ -17,7 +17,7 @@
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-admin.initializecertificate();
+admin.initializeapp();
 const express = require("express");
 //  const cookieParser = require('cookie-parser')();
 const cors = require("cors")({ origin: true });
