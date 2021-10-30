@@ -60,7 +60,7 @@ const addCertificate = async (req, res) => {
   // Push the new message into Firestore using the Firebase Admin SDK.
   await admin
     .firestore()
-    .collection("certificate/")
+    .collection("Certificate/")
     .doc(`${address}`)
     .set({ url, address });
 
@@ -74,7 +74,7 @@ const deleteCertificate = async (req, res) => {
   // Grab the text parameter.
   const address = req.body.address;
   // Push the new message into Firestore using the Firebase Admin SDK.
-  await admin.firestore().collection("certificate/").doc(`${address}`).delete();
+  await admin.firestore().collection("Certificate/").doc(`${address}`).delete();
 
   // Send back a message that we've successfully written the message
   res.json({
@@ -83,7 +83,7 @@ const deleteCertificate = async (req, res) => {
 };
 
 certificate.use(cors);
-certificate.use(validateWeb3Token);
+// certificate.use(validateWeb3Token);
 certificate.post("/addCertificate", addCertificate);
 certificate.post("/deleteCertificate", deleteCertificate);
 
