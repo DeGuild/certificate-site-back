@@ -58,7 +58,13 @@ const addCertificate = async (req, res) => {
   const url = req.body.url
     ? req.body.url
     : "https://firebasestorage.googleapis.com/v0/b/deguild-2021.certificatespot.com/o/0.png?alt=media&token=131e4102-2ca3-4bf0-9480-3038c45aa372";
-  // Push the new message into Firestore using the Firebase Admin SDK.
+    await admin
+    .firestore()
+    .collection(`Certificate/`)
+    .doc(address)
+    .set({address});
+
+    // Push the new message into Firestore using the Firebase Admin SDK.
   await admin
     .firestore()
     .collection(`Certificate/${address}/tokens`)
