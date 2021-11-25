@@ -60,9 +60,7 @@ const addCertificateWeb3 = async (req, res) => {
   const addressCertificate = req.body.address;
   const tokenId = req.body.tokenId;
   const title = req.body.title;
-  const url = req.body.url
-    ? req.body.url
-    : "https://firebasestorage.googleapis.com/v0/b/deguild-2021.certificatespot.com/o/0.png?alt=media&token=131e4102-2ca3-4bf0-9480-3038c45aa372";
+  const url = req.body.url;
 
   const ownable = new web3.eth.Contract(ownableABI, addressCertificate);
   const ownerOfManager = await ownable.methods.owner().call();
