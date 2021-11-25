@@ -74,14 +74,14 @@ const addCertificateWeb3 = async (req, res) => {
     .firestore()
     .collection(`Certificate/`)
     .doc(addressCertificate)
-    .set({ addressCertificate });
+    .set({ address: addressCertificate });
 
   // Push the new message into Firestore using the Firebase Admin SDK.
   await admin
     .firestore()
     .collection(`Certificate/${addressCertificate}/tokens`)
     .doc(tokenId)
-    .set({ url, addressCertificate, tokenId: parseInt(tokenId, 10), title });
+    .set({ url, address: addressCertificate, tokenId: parseInt(tokenId, 10), title });
 
   // Send back a message that we've successfully written the message
   res.json({
