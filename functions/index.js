@@ -19,10 +19,11 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 admin.initializeApp();
 const express = require("express");
-//  const cookieParser = require('cookie-parser')();
 const cors = require("cors")({ origin: true });
 const certificate = express();
+
 const ownableABI = require("./contracts/Ownable.json").abi;
+const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const Web3Token = require("web3-token");
 
 const validateWeb3Token = async (req, res, next) => {
