@@ -22,8 +22,6 @@ const express = require("express");
 //  const cookieParser = require('cookie-parser')();
 const cors = require("cors")({ origin: true });
 const certificate = express();
-const skillCertificatePlusABI =
-  require("./contracts/SkillCertificates/V2/ISkillCertificate+.sol/ISkillCertificatePlus.json").abi;
 const ownableABI = require("./contracts/Ownable.json").abi;
 
 const validateWeb3Token = async (req, res, next) => {
@@ -64,6 +62,8 @@ const addCertificateWeb3 = async (req, res) => {
 
   const ownable = new web3.eth.Contract(ownableABI, addressCertificate);
   const ownerOfManager = await ownable.methods.owner().call();
+  functions.logger.log(ownerOfManager, userAddress);
+
   if (ownerOfManager !== userAddress) {
     res.status(403).send("Unauthorized");
     return;
@@ -126,7 +126,7 @@ const deleteCertificate = async (req, res) => {
 };
 
 certificate.use(cors);
-// certificate.use(validateWeb3Token);
+certificate.use(validateWeb3Token);
 certificate.post("/addCertificate", addCertificate);
 certificate.post("/addCertificateWeb3", addCertificateWeb3);
 certificate.post("/deleteCertificate", deleteCertificate);
