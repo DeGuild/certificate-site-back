@@ -26,6 +26,9 @@ const ownableABI = require("./contracts/Ownable.json").abi;
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const Web3Token = require("web3-token");
 
+/**
+ * @dev function to check the token attached from the request, rejecting any request with no Web3 token attached
+ */
 const validateWeb3Token = async (req, res, next) => {
   if (!req.headers.authorization) {
     functions.logger.error(
@@ -50,6 +53,9 @@ const validateWeb3Token = async (req, res, next) => {
   return;
 };
 
+/**
+ * @dev function to add certificate to the database, but can only proceed if the sender is the owner
+ */
 const addCertificateWeb3 = async (req, res) => {
   const web3 = createAlchemyWeb3(functions.config().web3.api);
 
@@ -81,7 +87,12 @@ const addCertificateWeb3 = async (req, res) => {
     .firestore()
     .collection(`Certificate/${addressCertificate}/tokens`)
     .doc(tokenId)
-    .set({ url, address: addressCertificate, tokenId: parseInt(tokenId, 10), title });
+    .set({
+      url,
+      address: addressCertificate,
+      tokenId: parseInt(tokenId, 10),
+      title,
+    });
 
   // Send back a message that we've successfully written the message
   res.json({
@@ -89,11 +100,34 @@ const addCertificateWeb3 = async (req, res) => {
   });
 };
 
+/**
+ * @dev function to delete Magic Scroll from the database, but can only proceed if the sender is the owner
+ */
 const deleteCertificate = async (req, res) => {
   // Grab the text parameter.
-  const address = req.body.address;
+  const web3 = createAlchemyWeb3(functions.config().web3.api);
+
+  const token = req.headers.authorization;
+  const { address, body } = await Web3Token.verify(token);
+  const userAddress = web3.utils.toChecksumAddress(address);
+
+  const addressCertificate = req.body.address;
+  const tokenId = req.body.tokenId;
+
+  const ownable = new web3.eth.Contract(ownableABI, addressCertificate);
+  const ownerOfManager = await ownable.methods.owner().call();
+  functions.logger.log(ownerOfManager, userAddress);
+
+  if (ownerOfManager !== userAddress) {
+    res.status(403).send("Unauthorized");
+    return;
+  }
   // Push the new message into Firestore using the Firebase Admin SDK.
-  await admin.firestore().collection("Certificate/").doc(`${address}`).delete();
+  await admin
+    .firestore()
+    .collection(`Certificate/${addressCertificate}/tokens`)
+    .doc(tokenId)
+    .delete();
 
   // Send back a message that we've successfully written the message
   res.json({
@@ -103,7 +137,6 @@ const deleteCertificate = async (req, res) => {
 
 certificate.use(cors);
 certificate.use(validateWeb3Token);
-// certificate.post("/addCertificate", addCertificate);
 certificate.post("/addCertificate", addCertificateWeb3);
 certificate.post("/deleteCertificate", deleteCertificate);
 
